@@ -1,4 +1,4 @@
-# quickshell-island
+# Dynamic Island Using Quickshell
 
 A dynamic island for Hyprland, written in Quickshell. It sits at the top of the
 screen and grows when something happens: a song starts, a timer runs, a
