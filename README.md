@@ -4,6 +4,10 @@ A dynamic island for Hyprland, written in Quickshell. It sits at the top of the
 screen and grows when something happens: a song starts, a timer runs, a
 notification arrives, you press the launcher key.
 
+---
+![Dynamic Island](island.gif)
+---
+
 It does three jobs:
 
 - **Island.** Music, timer and recording show up as live activities. Click it to
@@ -161,6 +165,8 @@ Commands: `toggle`, `open <tab>`, `close`, `settings`, `center`, `launcher`,
 Open them from the island, or with the `islandSettings` bind. Everything is live
 and is saved to `settings.json` in the island folder. The file is created on
 first run. Delete it to reset.
+
+<img src="settings.png">
 
 ## Ryoku
 
