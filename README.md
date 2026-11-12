@@ -52,7 +52,7 @@ Other distros: install the same things under whatever they are called there.
 ## Install
 
 ```bash
-git clone https://github.com/<your-user>/quickshell-island ~/.config/quickshell/island
+git clone https://github.com/Alan-Betty/quickshell-DynamicIsland ~/.config/quickshell/island
 qs -c island
 ```
 
