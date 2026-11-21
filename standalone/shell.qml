@@ -2,8 +2,9 @@
 import QtQuick
 import Quickshell
 
-// Dynamic Island — standalone Quickshell instance that runs next to your bar.
-//   qs -c island
+// Dynamic Island, standalone build. Runs next to whatever bar you use:
+//   qs -c island            (this folder linked to ~/.config/quickshell/island)
+//   qs -p /path/to/standalone
 ShellRoot {
     Variants {
         model: Quickshell.screens
@@ -16,5 +17,5 @@ ShellRoot {
     }
 
     // touch the singletons so the services start immediately
-    Component.onCompleted: { Hub.armed; Notifs.ready; Theme.dark; }
+    Component.onCompleted: { Platform.kind; Hub.armed; Notifs.count; Theme.accent; }
 }

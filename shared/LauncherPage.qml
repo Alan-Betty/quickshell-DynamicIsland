@@ -37,6 +37,7 @@ Item {
         id: histFile
         path: Config.dir + "/launcher-history.json"
         blockLoading: true
+        printErrors: false
         onAdapterUpdated: writeAdapter()
         onLoadFailed: writeAdapter()
         JsonAdapter {
@@ -51,14 +52,63 @@ Item {
     }
 
     // ── maths ──
+    // A small shunting-yard evaluator: + - * / % ^ and brackets. No eval().
+    function mathEval(src) {
+        const toks = [];
+        for (let i = 0; i < src.length;) {
+            const c = src[i];
+            if (c === " ") { i++; continue; }
+            if (/[0-9.,]/.test(c)) {
+                let j = i;
+                while (j < src.length && /[0-9.,]/.test(src[j])) j++;
+                toks.push({ n: parseFloat(src.slice(i, j).replace(/,/g, ".")) });
+                i = j;
+                continue;
+            }
+            if ("+-*/%^()".indexOf(c) < 0) return NaN;
+            toks.push({ o: c });
+            i++;
+        }
+        const prec = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 2, "^": 3, "neg": 4 };
+        const out = [], ops = [];
+        let prev = null;
+        for (const t of toks) {
+            if (t.n !== undefined) { if (isNaN(t.n)) return NaN; out.push(t); }
+            else if (t.o === "(") ops.push("(");
+            else if (t.o === ")") {
+                while (ops.length && ops[ops.length - 1] !== "(") out.push({ o: ops.pop() });
+                if (!ops.length) return NaN;
+                ops.pop();
+            } else {
+                let op = t.o;
+                const unary = prev === null || (prev.o !== undefined && prev.o !== ")");
+                if (unary && op === "+") { prev = t; continue; }
+                if (unary && op === "-") op = "neg";
+                while (ops.length && ops[ops.length - 1] !== "(" && op !== "neg"
+                       && (prec[ops[ops.length - 1]] > prec[op] || (prec[ops[ops.length - 1]] === prec[op] && op !== "^")))
+                    out.push({ o: ops.pop() });
+                ops.push(op);
+            }
+            prev = t;
+        }
+        while (ops.length) { const o = ops.pop(); if (o === "(") return NaN; out.push({ o: o }); }
+        const st = [];
+        for (const t of out) {
+            if (t.n !== undefined) { st.push(t.n); continue; }
+            if (t.o === "neg") { if (!st.length) return NaN; st.push(-st.pop()); continue; }
+            if (st.length < 2) return NaN;
+            const b = st.pop(), a = st.pop();
+            st.push(t.o === "+" ? a + b : t.o === "-" ? a - b : t.o === "*" ? a * b
+                  : t.o === "/" ? a / b : t.o === "%" ? a % b : Math.pow(a, b));
+        }
+        return st.length === 1 ? st[0] : NaN;
+    }
     readonly property string mathResult: {
         const s = cmdMode ? "" : q;
         if (s.length < 2 || !/^[0-9+\-*/().%^ ,]+$/.test(s) || !/[0-9]/.test(s) || !/[+\-*/%^]/.test(s)) return "";
-        try {
-            const v = Function('"use strict"; return (' + s.replace(/\^/g, "**").replace(/,/g, ".") + ")")();
-            if (typeof v !== "number" || !isFinite(v)) return "";
-            return String(Math.round(v * 1e10) / 1e10);
-        } catch (e) { return ""; }
+        const v = mathEval(s);
+        if (typeof v !== "number" || !isFinite(v)) return "";
+        return String(Math.round(v * 1e10) / 1e10);
     }
 
     // ── results ──
@@ -115,26 +165,17 @@ Item {
     onRowsChanged: sel = Math.min(sel, Math.max(0, rows.length - 1))
     onQueryChanged: sel = 0
 
-    function terminal(cmd) {
-        // order: kitty, then xdg-terminal-exec, then $TERMINAL (default foot)
-        return ["sh", "-c", "if command -v kitty >/dev/null; then exec kitty --hold sh -c \"$1\"; " +
-                "elif command -v xdg-terminal-exec >/dev/null; then exec xdg-terminal-exec sh -c \"$1; exec $SHELL\"; " +
-                "else exec ${TERMINAL:-foot} sh -c \"$1; exec $SHELL\"; fi", "sh", cmd];
-    }
     function activate(i, inTerminal) {
         const r = rows[i];
         if (!r) return;
         if (r.kind === "app") {
             const e = r.entry;
             bump(e.id);
-            if (e.runInTerminal) Quickshell.execDetached(terminal(e.execString.replace(/%[fFuUdDnNickvm]/g, "").trim()));
-            else e.execute();
+            Platform.launch(e);
         } else if (r.kind === "cmd") {
-            const c = r.title;
-            if (inTerminal) Quickshell.execDetached(terminal(c));
-            else Quickshell.execDetached(["sh", "-c", c]);
+            Platform.runCommand(r.title, inTerminal);
         } else if (r.kind === "math") {
-            Quickshell.execDetached(["sh", "-c", "printf %s \"$1\" | wl-copy", "sh", mathResult]);
+            Platform.copyText(mathResult);
         }
         Hub.closeLauncher();
     }

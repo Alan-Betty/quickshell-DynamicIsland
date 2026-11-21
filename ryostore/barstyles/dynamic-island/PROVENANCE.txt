@@ -1,0 +1,33 @@
+Dynamic Island, Ryoku bar style
+
+Upstream: quickshell-DynamicIsland, https://github.com/Alan-Betty/quickshell-DynamicIsland
+Version: 4.0.0
+Licence: MIT, see LICENSE (Alan Betty).
+
+Built from upstream's ryostore/barstyles/dynamic-island folder. In upstream:
+
+- shared/ holds the island's QML and shader, the same code the standalone
+  Hyprland build runs. tools/sync.sh copies it here verbatim.
+- Platform.qml is written for Ryoku: notifications wrap shell.services Notifs,
+  compositor state comes from the Wm facade, and Night Shift, Caffeine,
+  session actions, screenshots and recording go through the shell's
+  Nightlight, Flags, SessionActions, Capture and Recorder services. Launching
+  goes through AppLaunch and Spawn.
+- Scene.qml is the bar style entry. ShellShortcut.qml bridges global
+  shortcuts through the Wm provider's GlobalShortcutBridge.
+
+4.0.0
+- Black island; liquid glass is a shader on the controls only.
+- Tray menus open inside the island; urgent banners expire; banner holds
+  can't stick.
+- Idle work trimmed: minute clock ticks, visualizer and position ticks only
+  while visible, Pipewire mic detection, stats and network polls tied to
+  their tab.
+- One shared codebase with the standalone build, behind Platform.qml.
+
+1.0.1 (store port)
+- Recording pulse only animates while visible; gsettings monitor ends with
+  the shell; wallpaper probe only runs when it is used.
+
+1.0.0 (store port)
+- First Ryoku port of upstream 3.0.

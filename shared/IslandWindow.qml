@@ -1,23 +1,20 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
-import Quickshell.Io
 
-// One transparent full-screen overlay per screen holding the island, its bubbles,
-// banners and the Notification Center. Only those items take input (mask).
+// One transparent full-screen overlay per screen holding the island, its
+// bubbles, banners and the Notification Center. Only those take input (mask).
 PanelWindow {
     id: win
     required property ShellScreen modelData
     screen: modelData
     readonly property string screenName: screen ? screen.name : ""
-    readonly property bool focusedHere: !Hyprland.focusedMonitor || Hyprland.focusedMonitor.name === screenName
+    readonly property bool focusedHere: Platform.focusedOutput === "" || Platform.focusedOutput === screenName
 
-    // Hide everything while this monitor's workspace has a fullscreen window
-    // (videos, games). Opening the island (Super+I) or the Notification Center
-    // still works and brings it back until it is closed again.
-    readonly property HyprlandMonitor hyprMonitor: Hyprland.monitorFor(screen)
-    readonly property bool fullscreenHere: !!(hyprMonitor && hyprMonitor.activeWorkspace && hyprMonitor.activeWorkspace.hasFullscreen)
+    // Hide everything while this output shows a fullscreen window (videos,
+    // games). Opening the island or the Notification Center still brings it
+    // back until it is closed again.
+    readonly property bool fullscreenHere: Platform.outputHasFullscreen(screenName)
     readonly property bool hiddenForFullscreen: fullscreenHere && !island.isExpanded && !island.isLauncher && !centerShown
     visible: !hiddenForFullscreen
 
@@ -25,48 +22,32 @@ PanelWindow {
     anchors.left: true
     anchors.right: true
     anchors.bottom: true
-    // the island itself always floats; space is reserved by `reserver` below
     exclusionMode: (Config.s.overlayBar || Config.s.reserveSpace) ? ExclusionMode.Ignore : ExclusionMode.Normal
     exclusiveZone: 0
     color: "transparent"
 
     readonly property bool centerShown: Notifs.centerOpen && Notifs.centerScreen === screenName
-    readonly property bool interactive: island.isExpanded || island.isLauncher || centerShown || Notifs.replying || banners.hovered
+    readonly property bool open: island.isExpanded || island.isLauncher || centerShown
+    // keyboard: taken while something is open or a reply is being typed;
+    // offered on demand while a banner is under the pointer, so clicking its
+    // reply field can focus it
+    readonly property bool interactive: open || Notifs.replying || banners.hovered || island.holdingNotif
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell:island"
-    WlrLayershell.keyboardFocus: interactive ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: open || Notifs.replying ? WlrKeyboardFocus.Exclusive
+                               : interactive ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     mask: Region {
         item: island
         Region { item: island.bubble }
         Region { item: island.clockBubble }
         Region { item: banners.visible ? banners : null }
-        Region { item: scrim.visible ? scrim : null }
+        Region { item: clickAway.visible ? clickAway : null }
     }
 
     // ── Reserve a strip at the top (like a bar) so windows tile below the island ──
-    // Invisible, takes no input. Zone = island bottom + 6px − (frame edge + gaps_out),
-    // because Hyprland already adds gaps_out on top of the reserved area.
-    property int gapsTop: 18
-    Process {
-        id: gapsProc
-        running: true
-        command: ["hyprctl", "getoption", "general:gaps_out", "-j"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const j = JSON.parse(this.text);
-                    const v = parseInt(String(j.css !== undefined ? j.css : j.int).trim().split(/\s+/)[0]);
-                    if (!isNaN(v)) win.gapsTop = v;
-                } catch (e) {}
-            }
-        }
-    }
-    Connections {
-        target: Hyprland
-        function onRawEvent(event) { if (event.name === "configreloaded") gapsProc.running = true; }
-    }
+    // Invisible, takes no input. Zone = island bottom + 6 px − the compositor's outer gaps.
     PanelWindow {
         id: reserver
         screen: win.screen
@@ -77,25 +58,35 @@ PanelWindow {
         implicitHeight: 1
         color: "transparent"
         exclusionMode: ExclusionMode.Normal
-        exclusiveZone: Math.max(0, Config.s.topMargin + 38 + 6 - win.gapsTop)
+        exclusiveZone: Math.max(0, Config.s.topMargin + 38 + 6 - Platform.outerGaps)
         mask: Region {}
         WlrLayershell.layer: WlrLayer.Bottom
         WlrLayershell.namespace: "quickshell:island-reserve"
     }
 
-    HyprlandFocusGrab {
-        windows: [win]
-        active: island.isExpanded || island.isLauncher || win.centerShown
-        onCleared: { Hub.expanded = false; Notifs.centerOpen = false; Hub.launcherOpen = false; }
+    // ── Click-away ──
+    // While anything is open the mask grows to the whole output and this
+    // underlay takes the click, so a press on the desktop closes the island.
+    // No compositor focus grab: a grab is what used to collapse the island
+    // the moment a tray menu or another popup took focus.
+    MouseArea {
+        id: clickAway
+        anchors.fill: parent
+        z: 1
+        visible: win.open || Notifs.replying
+        acceptedButtons: Qt.AllButtons
+        onPressed: {
+            Hub.collapse();
+            Notifs.endReplies();
+        }
     }
 
-    // ── Notification Center backdrop: dims + (via the blur layerrule) frosts the desktop ──
+    // ── Notification Center backdrop: dims the desktop ──
     Rectangle {
         id: scrim
         anchors.fill: parent
-        z: 1
-        // above the 0.35 ignore_alpha threshold → Hyprland blurs the whole screen behind it
-        color: Theme.dark ? Qt.rgba(0, 0, 0, 0.46) : Qt.rgba(0.08, 0.08, 0.1, 0.40)
+        z: 2
+        color: Qt.rgba(0, 0, 0, 0.55)
         opacity: win.centerShown ? 1 : 0
         visible: opacity > 0.01
         Behavior on opacity { NumberAnimation { duration: Theme.reduced ? 1 : 220; easing.type: Easing.OutCubic } }
@@ -104,7 +95,7 @@ PanelWindow {
 
     NotificationCenter {
         id: center
-        z: 2
+        z: 3
         shown: win.centerShown
         screenName: win.screenName
         maxHeight: win.height - y - 16
@@ -115,7 +106,8 @@ PanelWindow {
     // Banners sit *under* the island so they appear to drop out of it
     BannerStack {
         id: banners
-        z: 5
+        z: 6
+        screenName: win.screenName
         active: Config.s.notifStyle !== "island" && win.focusedHere && !win.centerShown
         readonly property bool corner: Config.s.notifStyle === "corner"
         width: corner ? 370 : 400
@@ -127,7 +119,7 @@ PanelWindow {
 
     Island {
         id: island
-        z: 10
+        z: 20
         screenName: win.screenName
         x: Math.round((win.width - width) / 2)
         y: Config.s.topMargin

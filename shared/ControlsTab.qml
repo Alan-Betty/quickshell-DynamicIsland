@@ -8,7 +8,7 @@ Item {
     id: root
     clip: true
 
-    component PowerBtn: Rectangle {
+    component PowerBtn: Lens {
         id: pb
         property string icon: ""
         property string label: ""
@@ -19,9 +19,12 @@ Item {
         Layout.fillWidth: true
         implicitHeight: 40
         radius: 20
-        color: armed ? armColor : pbMa.containsMouse ? Theme.fill2 : Theme.fill
+        tint: armColor
+        tintAmount: armed ? 0.9 : 0
+        hovered: pbMa.containsMouse
+        pressed: pbMa.pressed
         scale: pbMa.pressed ? 0.94 : 1
-        Behavior on color { ColorAnimation { duration: 180 } }
+        Behavior on tintAmount { NumberAnimation { duration: 180 } }
         Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutBack; easing.overshoot: 2.5 } }
         Row {
             anchors.centerIn: parent
@@ -163,8 +166,8 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 0
-                CCButton { Layout.fillWidth: true; icon: "nightlight"; label: "Night Shift"; sub: Hub.nightLight ? Config.s.nightLightTemp + "K" : "Off"; active: Hub.nightLight; activeColor: Theme.ccTint("#ff9f45"); onClicked: Hub.nightLight = !Hub.nightLight }
-                CCButton { Layout.fillWidth: true; icon: "coffee"; label: "Caffeine"; sub: Hub.caffeine ? "Awake" : "Off"; active: Hub.caffeine; activeColor: Theme.ccTint(Theme.orange); onClicked: Hub.caffeine = !Hub.caffeine }
+                CCButton { Layout.fillWidth: true; icon: "nightlight"; label: "Night Shift"; sub: Hub.nightLight ? Config.s.nightLightTemp + "K" : "Off"; active: Hub.nightLight; activeColor: Theme.ccTint("#ff9f45"); onClicked: Hub.toggleNightLight() }
+                CCButton { Layout.fillWidth: true; icon: "coffee"; label: "Caffeine"; sub: Hub.caffeine ? "Awake" : "Off"; active: Hub.caffeine; activeColor: Theme.ccTint(Theme.orange); onClicked: Hub.toggleCaffeine() }
                 CCButton { Layout.fillWidth: true; icon: "timer"; label: "Timer"; sub: Hub.timerActive ? Hub.fmtTime(Hub.timerLeft) : "25 min"; active: Hub.timerActive; activeColor: Theme.ccTint(Theme.orange); onClicked: Hub.timerActive ? Hub.timerToggle() : Hub.startTimer(1500) }
                 CCButton { Layout.fillWidth: true; icon: Hub.micMuted ? "mic_off" : "mic"; label: "Mic"; sub: Hub.micMuted ? "Muted" : "Live"; active: Hub.micMuted; activeColor: Theme.red; onClicked: Hub.toggleMic() }
                 CCButton { Layout.fillWidth: true; icon: "screenshot_region"; label: "Screenshot"; onClicked: Hub.screenshot() }
