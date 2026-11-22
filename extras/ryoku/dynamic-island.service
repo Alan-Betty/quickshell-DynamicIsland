@@ -1,0 +1,35 @@
+# Start the standalone Dynamic Island with a Ryoku session and let it own
+# notifications.
+#
+# The Ryoku shell runs its own notification server. Whichever process claims
+# org.freedesktop.Notifications first keeps it, and Quickshell retries when the
+# owner goes away. So the island starts before ryoku-shell.service and only
+# counts as started once it holds the name (or after 10 seconds). The shell then
+# comes up, finds the name taken and waits. If the island stops, the shell
+# takes notifications back on its own.
+#
+# Install:
+#   cp extras/ryoku/dynamic-island.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now dynamic-island.service
+#   systemctl --user restart ryoku-shell.service   # once, to hand over the bus
+#
+# Expects the standalone build linked at ~/.config/quickshell/island.
+
+[Unit]
+Description=Dynamic Island (standalone Quickshell build)
+Documentation=https://github.com/Alan-Betty/quickshell-DynamicIsland
+PartOf=ryoku-session.target
+After=ryoku-session.target
+Before=ryoku-shell.service
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+ExecStart=/usr/bin/qs -c island
+ExecStartPost=/bin/sh -c 'for i in $$(seq 50); do [ "$$(busctl --user status org.freedesktop.Notifications 2>/dev/null | sed -n s/^PID=//p)" = "$$MAINPID" ] && exit 0; sleep 0.2; done; exit 0'
+Restart=on-failure
+RestartSec=2
+Slice=session.slice
+
+[Install]
+WantedBy=ryoku-session.target

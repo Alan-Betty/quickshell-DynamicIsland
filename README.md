@@ -97,6 +97,19 @@ systemctl --user disable --now mako swaync dunst
 
 Also remove any `exec-once = mako` style lines. If your bar is a Quickshell config with its own notification server, turn that off in the bar; the island can't stop it without stopping the bar. Settings → Notifications shows who owns the bus right now and has a Take Over button.
 
+### The standalone build on Ryoku
+
+Ryostore is the usual way to run the island on Ryoku. If you'd rather run the standalone build there, start it with systemd instead of `exec-once`. The Ryoku shell has its own notification server that can't be switched off, and whichever process claims the bus first keeps it. [`extras/ryoku/dynamic-island.service`](extras/ryoku/dynamic-island.service) starts the island before `ryoku-shell.service` and waits until the island holds the bus. The shell then starts, finds the bus taken and waits. If the island stops, the shell takes notifications back by itself.
+
+```bash
+cp extras/ryoku/dynamic-island.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now dynamic-island.service
+systemctl --user restart ryoku-shell.service   # once, so the shell lets go of the bus
+```
+
+Notifications then show up in the island's Notification Center, not the shell's. To give them back, `systemctl --user disable --now dynamic-island.service` and restart the shell.
+
 ## Using it
 
 | On the island | |
@@ -145,6 +158,7 @@ shared/      the island itself; the one place to edit QML
 standalone/  the Hyprland build: shell.qml, Platform.qml, plus copies of shared/
 ryostore/    the Ryostore items, each a self-contained folder
 tools/       sync.sh, build-shaders.sh, stage-ryostore.sh
+extras/      a systemd unit for running the standalone build on Ryoku
 docs/        how the glass works, how the store items fit, how to develop
 ```
 
@@ -156,7 +170,7 @@ Everything compositor- or desktop-specific lives in one file per build, `Platfor
 
 **The controls look flat.** Liquid Glass may be off (Settings → Appearance), or your GPU refused the shader. The log says which.
 
-**Notifications still come from the old daemon.** Use Take Over in Settings → Notifications, or disable the daemon as shown above.
+**Notifications still come from the old daemon.** Use Take Over in Settings → Notifications, or disable the daemon as shown above. On Ryoku, Take Over can't stop the shell's server; use the systemd unit from [The standalone build on Ryoku](#the-standalone-build-on-ryoku).
 
 **Icons are boxes.** Install `ttf-material-symbols-variable-git`.
 

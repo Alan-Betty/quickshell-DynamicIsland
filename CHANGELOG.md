@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New: `extras/ryoku/dynamic-island.service` starts the standalone build with a Ryoku session and lets it own notifications ahead of the Ryoku shell. See "The standalone build on Ryoku" in the README.
 - Fixed: a USB camera plugged in after the island started never lit the privacy indicator. The camera check now runs every time the island looks for camera use.
 
 ## 4.0.0
