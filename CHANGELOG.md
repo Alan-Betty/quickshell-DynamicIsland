@@ -6,6 +6,7 @@
 - Fixed: liquid glass over album art sampled the artwork with a zero size, so the controls on the Media tab and media peek didn't refract it.
 - Fixed: a USB camera plugged in after the island started never lit the privacy indicator. The camera check now runs every time the island looks for camera use.
 - Fixed: with many tray apps and a high Icons in the Header setting, the tray beads drew over the Home tab and took its clicks. Beads that don't fit now go behind the "+N" bead.
+- Fixed: the launcher's maths answered `-2^2` with 4 instead of -4, and read a malformed number like `1.2.3` as 1.2 instead of giving no answer.
 
 ## 4.0.0
 
