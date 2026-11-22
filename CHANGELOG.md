@@ -8,6 +8,7 @@
 - Fixed: with many tray apps and a high Icons in the Header setting, the tray beads drew over the Home tab and took its clicks. Beads that don't fit now go behind the "+N" bead.
 - Fixed: the launcher's maths answered `-2^2` with 4 instead of -4, and read a malformed number like `1.2.3` as 1.2 instead of giving no answer.
 - Fixed: reopening the Ryostore launcher during its close animation kept the old search text while the results reset, so Enter could launch an unrelated app.
+- Fixed: on Ryoku, notifications that were already there when you switched to the island showed "now" in the Notification Center forever. They now show when they really arrived.
 
 ## 4.0.0
 

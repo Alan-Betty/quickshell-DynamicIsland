@@ -35,6 +35,17 @@ Singleton {
     readonly property var list: Platform.notifList
     readonly property int count: list.length
 
+    // record notifications that were already there when the island loaded,
+    // without a banner; `at` is when they really arrived, if known (ms)
+    function seed(items, at) {
+        const t = Object.assign({}, times);
+        for (let i = 0; i < items.length; i++) {
+            const n = items[i];
+            if (n && !t[n.id]) t[n.id] = Number(at ? at(n) : 0) || Date.now();
+        }
+        times = t;
+    }
+
     function receive(n) {
         const t = Object.assign({}, times);
         t[n.id] = Date.now();
