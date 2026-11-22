@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: a USB camera plugged in after the island started never lit the privacy indicator. The camera check now runs every time the island looks for camera use.
+
 ## 4.0.0
 
 The island is black now, and the glass moved to the controls on it.
