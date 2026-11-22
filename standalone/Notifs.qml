@@ -84,7 +84,9 @@ Singleton {
         popups = [n].concat(popups.filter(p => p && p !== n)).slice(0, 5);
         const e = Object.assign({}, expiry);
         const life = lifetime(n);
-        e[n.id] = life === Number.MAX_SAFE_INTEGER ? life : Date.now() + life;
+        // during a hold, count from when it began: releasing the hold adds the
+        // whole hold to every deadline, so this one gets just its own lifetime
+        e[n.id] = life === Number.MAX_SAFE_INTEGER ? life : (hold ? holdStart : Date.now()) + life;
         expiry = e;
     }
     function removePopup(n) {
