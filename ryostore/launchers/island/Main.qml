@@ -270,6 +270,13 @@ Scope {
                             font.weight: Font.Medium
                             Component.onCompleted: forceActiveFocus()
                             onTextEdited: { root.query = text; root.selected = 0; }
+                            // reopening during the close animation keeps this field
+                            // alive, so take show()'s reset and the focus back
+                            Connections {
+                                target: root
+                                function onQueryChanged() { if (field.text !== root.query) field.text = root.query; }
+                                function onOpenChanged() { if (root.open) field.forceActiveFocus(); }
+                            }
                             Text {
                                 visible: field.text.length === 0
                                 anchors.verticalCenter: parent.verticalCenter
