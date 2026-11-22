@@ -3,8 +3,7 @@
 A Dynamic Island for the Linux desktop, written in Quickshell. A black pill sits at the top of the screen and grows when something happens: a song starts, a timer runs, a notification arrives, you open the launcher. Click it and it becomes a small dashboard. The controls on it are liquid glass.
 
 **Version 4.0.0** · [Changelog](CHANGELOG.md) · MIT
-
-![The expanded island on the Controls tab](assets/screens/controls.png)
+![Full Pic](assets/dynamic-island.gif)
 
 ## What's in it
 
@@ -23,8 +22,8 @@ A Dynamic Island for the Linux desktop, written in Quickshell. A black pill sits
 | | |
 |---|---|
 | ![Media tab over blurred album art](assets/screens/media.png) | ![A tray app's menu drawn inside the island](assets/screens/tray-menu.png) |
-| ![The launcher](assets/screens/launcher.png) | ![An urgent banner under the island, with one more tucked behind it](assets/screens/notifications.png) |
-
+| ![The launcher](assets/screens/launcher.png) | ![The expanded island on the Controls tab](assets/screens/controls.png)
+| ![An urgent banner under the island, with one more tucked behind it](assets/screens/notifications.png) |
 ## Liquid glass, where it belongs
 
 The island is black, like the hardware cut-out it imitates. Glass is for what you touch: toggles, buttons, the tab switcher, tray beads, the launcher's selection. Each control is a small lens. It bends what sits underneath it at the rim, frosts it, lifts it slightly and catches light along its top edge. Over album art you can watch the artwork warp at the edges of the play button.
