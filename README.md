@@ -10,6 +10,8 @@ A Dynamic Island for the Linux desktop, written in Quickshell. A black pill sits
 
 **Live activities.** Music, timers, the stopwatch and screen recording take over the pill while they run. A second activity splits off into its own bubble, and the clock steps out to the left so the time never disappears. Hover to peek at more.
 
+![Music playing as a live activity, with the clock stepped out to the left](assets/screens/live-activity.png)
+
 **A dashboard.** Click the island for four tabs: Home (clock, weather, calendar, system rings, now playing), Media, Controls (Wi-Fi and Bluetooth menus, sound and brightness, Night Shift, Caffeine, power) and Timer.
 
 **Notifications.** Banners drop out from under the island and slide back into it. Older ones tuck behind the newest and fan out on hover. The Notification Center groups by app, and supports swipe to clear, inline reply and Do Not Disturb.
@@ -21,7 +23,7 @@ A Dynamic Island for the Linux desktop, written in Quickshell. A black pill sits
 | | |
 |---|---|
 | ![Media tab over blurred album art](assets/screens/media.png) | ![A tray app's menu drawn inside the island](assets/screens/tray-menu.png) |
-| ![The launcher](assets/screens/launcher.png) | ![Notification cards](assets/screens/notifications.png) |
+| ![The launcher](assets/screens/launcher.png) | ![An urgent banner under the island, with one more tucked behind it](assets/screens/notifications.png) |
 
 ## Liquid glass, where it belongs
 
